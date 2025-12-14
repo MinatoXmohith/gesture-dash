@@ -261,20 +261,134 @@ const RunnerGame: React.FC = () => {
     ctx.fillStyle = '#444';
     ctx.fillRect(0, GROUND_Y, CANVAS_WIDTH, CANVAS_HEIGHT - GROUND_Y);
 
-    // Player
-    const p = game.player;
-    ctx.fillStyle = p.color;
-    // Simple glow effect
-    ctx.shadowBlur = 10;
-    ctx.shadowColor = p.color;
-    ctx.fillRect(p.x, p.y, p.width, p.height);
-    ctx.shadowBlur = 0;
-
     // Obstacles
     game.obstacles.forEach(obs => {
       ctx.fillStyle = obs.color;
       ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
     });
+
+    // Player (Human Figure)
+    const p = game.player;
+    const frame = game.frameCount;
+    
+    ctx.strokeStyle = p.color;
+    ctx.fillStyle = p.color;
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    // Add glow for hero
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = p.color;
+
+    const cx = p.x + p.width / 2;
+    const isRunning = !p.isJumping && !p.isDucking && !isPaused;
+    const animSpeed = 0.3;
+
+    if (p.isDucking) {
+        // Ducking Pose (Slide) - Streamlined horizontal pose
+        // Head (Lower and forward)
+        ctx.beginPath();
+        ctx.arc(p.x + p.width - 12, p.y + 12, 7, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Body (Horizontal)
+        ctx.beginPath();
+        ctx.moveTo(p.x + p.width - 12, p.y + 15); // Neck
+        ctx.lineTo(p.x + 10, p.y + 20); // Hips
+        ctx.stroke();
+
+        // Legs (Trailing behind)
+        ctx.beginPath();
+        ctx.moveTo(p.x + 10, p.y + 20);
+        ctx.lineTo(p.x, p.y + 15);
+        ctx.stroke();
+
+         // Arms (Forward for balance)
+        ctx.beginPath();
+        ctx.moveTo(p.x + 20, p.y + 18);
+        ctx.lineTo(p.x + 32, p.y + 25);
+        ctx.stroke();
+
+    } else {
+        // Upright Pose (Run/Jump)
+        
+        // Head
+        ctx.beginPath();
+        ctx.arc(cx, p.y + 9, 8, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Torso
+        ctx.beginPath();
+        ctx.moveTo(cx, p.y + 16);
+        ctx.lineTo(cx, p.y + 36);
+        ctx.stroke();
+
+        // Limbs Animation
+        // Use Sin/Cos for rhythmic running
+        const limbSwing = isRunning ? Math.sin(frame * animSpeed) * 12 : 0; 
+        
+        // Legs
+        const hipY = p.y + 36;
+        const footBaseY = p.y + 58; // Near bottom of bounding box
+        
+        if (p.isJumping) {
+            // Jump Pose: Legs tucked up slightly
+            ctx.beginPath();
+            ctx.moveTo(cx, hipY);
+            ctx.lineTo(cx - 8, hipY + 10);
+            ctx.lineTo(cx - 2, hipY + 18);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(cx, hipY);
+            ctx.lineTo(cx + 12, hipY + 8);
+            ctx.lineTo(cx + 8, hipY + 20);
+            ctx.stroke();
+        } else {
+            // Run Pose
+            // Left Leg
+            ctx.beginPath();
+            ctx.moveTo(cx, hipY);
+            ctx.lineTo(cx - limbSwing, footBaseY);
+            ctx.stroke();
+            
+            // Right Leg
+            ctx.beginPath();
+            ctx.moveTo(cx, hipY);
+            ctx.lineTo(cx + limbSwing, footBaseY);
+            ctx.stroke();
+        }
+
+        // Arms (Shoulder at y+18)
+        const shoulderY = p.y + 18;
+        if (p.isJumping) {
+            // Arms flung back/up
+            ctx.beginPath();
+            ctx.moveTo(cx, shoulderY);
+            ctx.lineTo(cx - 14, shoulderY - 8);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(cx, shoulderY);
+            ctx.lineTo(cx + 14, shoulderY - 8);
+            ctx.stroke();
+        } else {
+             // Run Pose (Arms swing opposite to legs)
+            ctx.beginPath();
+            ctx.moveTo(cx, shoulderY);
+            ctx.lineTo(cx + limbSwing, shoulderY + 14); 
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(cx, shoulderY);
+            ctx.lineTo(cx - limbSwing, shoulderY + 14);
+            ctx.stroke();
+        }
+    }
+    
+    // Reset Glow
+    ctx.shadowBlur = 0;
   };
 
   useEffect(() => {
