@@ -1,0 +1,7 @@
+{
+  "name": "Gesture Dash",
+  "description": "An AI-powered endless runner controlled by hand gestures. Use 1 hand to run, 2 for turbo. Open palm to jump, fist to duck.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
